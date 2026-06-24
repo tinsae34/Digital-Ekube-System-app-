@@ -30,6 +30,9 @@ export default function HomeScreen() {
               <ThemedText type="subtitle" style={styles.userName}>
                 {user?.name || 'Ekub Member'}
               </ThemedText>
+              <ThemedText type="small" themeColor="textSecondary" style={{ marginTop: 2 }}>
+                Role: <ThemedText type="smallBold" style={{ color: '#4A3AFF' }}>{user?.role ? user.role.toUpperCase() : 'USER'}</ThemedText> | Phone: {user?.phone || 'N/A'}
+              </ThemedText>
             </View>
             <Pressable
               style={({ pressed }) => [
@@ -57,6 +60,10 @@ export default function HomeScreen() {
               <View>
                 <ThemedText type="small" themeColor="textSecondary">Active Pools</ThemedText>
                 <ThemedText style={styles.statNumber}>3</ThemedText>
+              </View>
+              <View style={{ alignItems: 'center' }}>
+                <ThemedText type="small" themeColor="textSecondary">OTP Code</ThemedText>
+                <ThemedText style={styles.statNumber}>{user?.otp_placeholder || '123456'}</ThemedText>
               </View>
               <View>
                 <ThemeTextWrapper value="Next Draw Date" />

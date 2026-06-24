@@ -23,13 +23,14 @@ export default function RegisterScreen() {
   const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
+  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
+  const [role, setRole] = useState<'user' | 'admin'>('user');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleRegister = async () => {
-    if (!name || !email || !password) {
+    if (!name || !phone || !password) {
       setError('Please fill in all fields.');
       return;
     }
@@ -37,7 +38,7 @@ export default function RegisterScreen() {
     setError(null);
     setLoading(true);
     try {
-      await register(email, password, name);
+      await register(phone, password, name, role);
       router.replace('/(app)');
     } catch (err: any) {
       setError(err?.message || 'Failed to register account. Please try again.');
@@ -97,7 +98,7 @@ export default function RegisterScreen() {
 
             <View style={styles.inputContainer}>
               <ThemedText type="smallBold" themeColor="textSecondary">
-                EMAIL ADDRESS
+                PHONE NUMBER
               </ThemedText>
               <TextInput
                 style={[
@@ -108,13 +109,12 @@ export default function RegisterScreen() {
                     borderColor: colorScheme === 'dark' ? '#2E3135' : '#D1D3D8',
                   },
                 ]}
-                placeholder="Enter your email"
+                placeholder="e.g. +251912345678"
                 placeholderTextColor={colorScheme === 'dark' ? '#80848C' : '#90949C'}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
+                value={phone}
+                onChangeText={setPhone}
+                keyboardType="phone-pad"
                 autoCapitalize="none"
-                autoComplete="email"
               />
             </View>
 
@@ -140,11 +140,47 @@ export default function RegisterScreen() {
               />
             </View>
 
+            {/* Role selection */}
+            <View style={styles.inputContainer}>
+              <ThemedText type="smallBold" themeColor="textSecondary">
+                ACCOUNT ROLE
+              </ThemedText>
+              <View style={styles.roleContainer}>
+                <Pressable
+                  style={[
+                    styles.roleCard,
+                    {
+                      borderColor: role === 'user' ? '#4A3AFF' : (colorScheme === 'dark' ? '#2E3135' : '#D1D3D8'),
+                      backgroundColor: role === 'user' ? 'rgba(74, 58, 255, 0.08)' : (colorScheme === 'dark' ? '#18191B' : '#E6E7EB'),
+                    }
+                  ]}
+                  onPress={() => setRole('user')}>
+                  <ThemedText type={role === 'user' ? 'smallBold' : 'small'} style={role === 'user' ? { color: '#4A3AFF' } : {}}>
+                    👤 Member (User)
+                  </ThemedText>
+                </Pressable>
+                
+                <Pressable
+                  style={[
+                    styles.roleCard,
+                    {
+                      borderColor: role === 'admin' ? '#4A3AFF' : (colorScheme === 'dark' ? '#2E3135' : '#D1D3D8'),
+                      backgroundColor: role === 'admin' ? 'rgba(74, 58, 255, 0.08)' : (colorScheme === 'dark' ? '#18191B' : '#E6E7EB'),
+                    }
+                  ]}
+                  onPress={() => setRole('admin')}>
+                  <ThemedText type={role === 'admin' ? 'smallBold' : 'small'} style={role === 'admin' ? { color: '#4A3AFF' } : {}}>
+                    🔑 Admin / Organizer
+                  </ThemedText>
+                </Pressable>
+              </View>
+            </View>
+
             <Pressable
               style={({ pressed }) => [
                 styles.button,
                 {
-                  backgroundColor: '#4A3AFF', // Vibrant modern brand color
+                  backgroundColor: '#4A3AFF',
                   opacity: pressed || loading ? 0.8 : 1,
                 },
               ]}
@@ -256,6 +292,19 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     paddingHorizontal: Spacing.three,
     fontSize: 15,
+  },
+  roleContainer: {
+    flexDirection: 'row',
+    gap: Spacing.two,
+    marginTop: Spacing.half,
+  },
+  roleCard: {
+    flex: 1,
+    height: 44,
+    borderWidth: 1.5,
+    borderRadius: 12,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   button: {
     height: 48,

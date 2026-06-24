@@ -2,8 +2,10 @@ import { api, setApiToken } from './api';
 
 export interface User {
   id: string;
-  email: string;
+  phone: string;
   name: string;
+  role: string;
+  otp_placeholder?: string;
 }
 
 export interface AuthResponse {
@@ -12,19 +14,13 @@ export interface AuthResponse {
 }
 
 export const authService = {
-  login: async (email: string, password: string): Promise<AuthResponse> => {
+  login: async (phone: string, password?: string, otp?: string): Promise<AuthResponse> => {
     try {
       // Call the Flask backend login endpoint
-      const response = await api.post('/api/auth/login', { email, password });
+      const response = await api.post('/api/auth/login', { phone, password, otp });
       
-      // If the backend returns a real token, use it.
-      // Otherwise, since the backend routes are placeholders, we create a mock token for the frontend flow to succeed.
-      const token = response.token || 'mock-jwt-token-xyz123';
-      const user = response.user || {
-        id: '1',
-        email: email,
-        name: email.split('@')[0].toUpperCase(),
-      };
+      const token = response.token;
+      const user = response.user;
 
       setApiToken(token);
       return { user, token };
@@ -34,22 +30,28 @@ export const authService = {
     }
   },
 
-  register: async (email: string, password: string, name: string): Promise<AuthResponse> => {
+  register: async (phone: string, password: string, name: string, role: string = 'user'): Promise<AuthResponse> => {
     try {
       // Call the Flask backend register endpoint
-      const response = await api.post('/api/auth/register', { email, password, name });
+      const response = await api.post('/api/auth/register', { phone, password, name, role });
       
-      const token = response.token || 'mock-jwt-token-xyz123';
-      const user = response.user || {
-        id: '1',
-        email: email,
-        name: name || email.split('@')[0].toUpperCase(),
-      };
+      const token = response.token;
+      const user = response.user;
 
       setApiToken(token);
       return { user, token };
     } catch (error) {
       console.error('Register service error:', error);
+      throw error;
+    }
+  },
+
+  getCurrentUser: async (): Promise<User> => {
+    try {
+      const user = await api.get('/api/users/me');
+      return user;
+    } catch (error) {
+      console.error('Get current user error:', error);
       throw error;
     }
   },
