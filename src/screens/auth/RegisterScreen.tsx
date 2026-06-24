@@ -10,33 +10,32 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/services/authContext';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing, Radius, Shadow } from '@/constants/theme';
 
-const ROLES = [
-  { value: 'user',  label: 'Member',   emoji: '👤', desc: 'Join and participate in ekub groups' },
-  { value: 'admin', label: 'Organizer', emoji: '🔑', desc: 'Create and manage ekub groups' },
-] as const;
-
 type Role = 'user' | 'admin';
+
+const ROLES: { value: Role; label: string; desc: string; icon: keyof typeof Ionicons.glyphMap }[] = [
+  { value: 'user',  label: 'Member',    desc: 'Join & participate in groups',  icon: 'person-outline'           },
+  { value: 'admin', label: 'Organizer', desc: 'Create & manage ekub groups',   icon: 'shield-checkmark-outline' },
+];
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { register } = useAuth();
 
-  const [name, setName] = useState('');
-  const [phone, setPhone] = useState('');
-  const [password, setPassword] = useState('');
-  const [role, setRole] = useState<Role>('user');
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
+  const [name, setName]           = useState('');
+  const [phone, setPhone]         = useState('');
+  const [password, setPassword]   = useState('');
+  const [showPass, setShowPass]   = useState(false);
+  const [role, setRole]           = useState<Role>('user');
+  const [loading, setLoading]     = useState(false);
+  const [error, setError]         = useState<string | null>(null);
 
   const handleRegister = async () => {
-    if (!name || !phone || !password) {
-      setError('Please fill in all fields.');
-      return;
-    }
+    if (!name || !phone || !password) { setError('Please fill in all fields.'); return; }
     setError(null);
     setLoading(true);
     try {
@@ -59,32 +58,33 @@ export default function RegisterScreen() {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled">
 
-          {/* ── Logo ── */}
-          <View style={styles.logoWrap}>
-            <View style={styles.logoBadge}>
-              <ThemedText style={styles.logoText}>🏦</ThemedText>
+          {/* ── Brand ── */}
+          <View style={styles.brand}>
+            <View style={styles.logoRing}>
+              <Ionicons name="trending-up" size={28} color={Brand.accent} />
             </View>
-            <ThemedText style={styles.appName}>Create Account</ThemedText>
-            <ThemedText style={styles.appTagline}>
-              Join Digital Ekub and start saving together
-            </ThemedText>
+            <ThemedText style={styles.wordmark}>ekub</ThemedText>
+            <ThemedText style={styles.tagline}>Create your account</ThemedText>
           </View>
 
           {/* ── Card ── */}
           <View style={styles.card}>
+            <ThemedText style={styles.cardHeading}>Get started</ThemedText>
+            <ThemedText style={styles.cardSub}>Join thousands saving together</ThemedText>
 
             {/* Error */}
             {error && (
               <View style={styles.errorBox}>
-                <ThemedText style={styles.errorText}>⚠️ {error}</ThemedText>
+                <Ionicons name="alert-circle-outline" size={16} color={Brand.error} />
+                <ThemedText style={styles.errorText}>{error}</ThemedText>
               </View>
             )}
 
-            {/* Name */}
-            <View style={styles.fieldWrap}>
-              <ThemedText style={styles.fieldLabel}>FULL NAME</ThemedText>
-              <View style={styles.inputWrap}>
-                <ThemedText style={styles.inputIcon}>✏️</ThemedText>
+            {/* Full name */}
+            <View style={styles.fieldGroup}>
+              <ThemedText style={styles.label}>FULL NAME</ThemedText>
+              <View style={styles.inputRow}>
+                <Ionicons name="person-outline" size={18} color={Brand.textSecondary} />
                 <TextInput
                   style={styles.input}
                   placeholder="Your full name"
@@ -97,10 +97,10 @@ export default function RegisterScreen() {
             </View>
 
             {/* Phone */}
-            <View style={styles.fieldWrap}>
-              <ThemedText style={styles.fieldLabel}>PHONE NUMBER</ThemedText>
-              <View style={styles.inputWrap}>
-                <ThemedText style={styles.inputIcon}>📞</ThemedText>
+            <View style={styles.fieldGroup}>
+              <ThemedText style={styles.label}>PHONE NUMBER</ThemedText>
+              <View style={styles.inputRow}>
+                <Ionicons name="call-outline" size={18} color={Brand.textSecondary} />
                 <TextInput
                   style={styles.input}
                   placeholder="+251 9XX XXX XXX"
@@ -114,73 +114,91 @@ export default function RegisterScreen() {
             </View>
 
             {/* Password */}
-            <View style={styles.fieldWrap}>
-              <ThemedText style={styles.fieldLabel}>PASSWORD</ThemedText>
-              <View style={styles.inputWrap}>
-                <ThemedText style={styles.inputIcon}>🔑</ThemedText>
+            <View style={styles.fieldGroup}>
+              <ThemedText style={styles.label}>PASSWORD</ThemedText>
+              <View style={styles.inputRow}>
+                <Ionicons name="lock-closed-outline" size={18} color={Brand.textSecondary} />
                 <TextInput
                   style={styles.input}
                   placeholder="Create a strong password"
                   placeholderTextColor={Brand.textMuted}
                   value={password}
                   onChangeText={setPassword}
-                  secureTextEntry
+                  secureTextEntry={!showPass}
                   autoCapitalize="none"
                 />
+                <Pressable onPress={() => setShowPass(v => !v)}>
+                  <Ionicons
+                    name={showPass ? 'eye-off-outline' : 'eye-outline'}
+                    size={18}
+                    color={Brand.textSecondary}
+                  />
+                </Pressable>
               </View>
             </View>
 
             {/* Role selector */}
-            <View style={styles.fieldWrap}>
-              <ThemedText style={styles.fieldLabel}>ACCOUNT ROLE</ThemedText>
+            <View style={styles.fieldGroup}>
+              <ThemedText style={styles.label}>ACCOUNT ROLE</ThemedText>
               <View style={styles.roleRow}>
-                {ROLES.map(r => (
-                  <Pressable
-                    key={r.value}
-                    style={[
-                      styles.roleCard,
-                      role === r.value && styles.roleCardActive,
-                    ]}
-                    onPress={() => setRole(r.value)}>
-                    <ThemedText style={styles.roleEmoji}>{r.emoji}</ThemedText>
-                    <ThemedText style={[styles.roleLabel, role === r.value && styles.roleLabelActive]}>
-                      {r.label}
-                    </ThemedText>
-                    <ThemedText style={styles.roleDesc}>{r.desc}</ThemedText>
-                    {role === r.value && (
-                      <View style={styles.checkBadge}>
-                        <ThemedText style={styles.checkText}>✓</ThemedText>
+                {ROLES.map(r => {
+                  const isActive = role === r.value;
+                  return (
+                    <Pressable
+                      key={r.value}
+                      style={[styles.roleCard, isActive && styles.roleCardActive]}
+                      onPress={() => setRole(r.value)}>
+                      <View style={[styles.roleIconWrap, isActive && styles.roleIconWrapActive]}>
+                        <Ionicons
+                          name={r.icon}
+                          size={20}
+                          color={isActive ? Brand.white : Brand.textSecondary}
+                        />
                       </View>
-                    )}
-                  </Pressable>
-                ))}
+                      <ThemedText style={[styles.roleLabel, isActive && styles.roleLabelActive]}>
+                        {r.label}
+                      </ThemedText>
+                      <ThemedText style={styles.roleDesc}>{r.desc}</ThemedText>
+                      {isActive && (
+                        <View style={styles.checkMark}>
+                          <Ionicons name="checkmark" size={10} color={Brand.white} />
+                        </View>
+                      )}
+                    </Pressable>
+                  );
+                })}
               </View>
             </View>
 
-            {/* OTP hint */}
-            <View style={styles.otpHintBox}>
-              <ThemedText style={styles.otpHintText}>
-                📱 Your default OTP code will be <ThemedText style={styles.otpCode}>123456</ThemedText> — change it after login
+            {/* OTP info */}
+            <View style={styles.infoBox}>
+              <Ionicons name="information-circle-outline" size={16} color={Brand.accent} />
+              <ThemedText style={styles.infoText}>
+                Your default OTP code will be{' '}
+                <ThemedText style={styles.infoCode}>123456</ThemedText>
+                {' '}— update it in settings after login.
               </ThemedText>
             </View>
 
-            {/* Submit */}
+            {/* CTA */}
             <Pressable
-              style={({ pressed }) => [styles.submitBtn, { opacity: pressed || loading ? 0.8 : 1 }]}
+              style={({ pressed }) => [styles.cta, { opacity: pressed || loading ? 0.85 : 1 }]}
               onPress={handleRegister}
               disabled={loading}>
-              {loading ? (
-                <ActivityIndicator color={Brand.black} size="small" />
-              ) : (
-                <ThemedText style={styles.submitText}>Create Account</ThemedText>
-              )}
+              {loading
+                ? <ActivityIndicator color={Brand.white} size="small" />
+                : <>
+                    <ThemedText style={styles.ctaText}>Create Account</ThemedText>
+                    <Ionicons name="arrow-forward" size={18} color={Brand.white} />
+                  </>
+              }
             </Pressable>
 
             {/* Footer */}
             <View style={styles.footer}>
               <ThemedText style={styles.footerText}>Already have an account? </ThemedText>
               <Pressable onPress={() => router.push('/(auth)/login')}>
-                <ThemedText style={styles.footerLink}>Sign in here</ThemedText>
+                <ThemedText style={styles.footerLink}>Sign in</ThemedText>
               </Pressable>
             </View>
           </View>
@@ -192,52 +210,31 @@ export default function RegisterScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: Brand.bg1,
-  },
+  root: { flex: 1, backgroundColor: Brand.bg0 },
   scroll: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: Spacing.four,
-    maxWidth: 500,
+    maxWidth: 460,
     alignSelf: 'center',
     width: '100%',
+    gap: Spacing.five,
   },
 
-  // Logo
-  logoWrap: {
-    alignItems: 'center',
-    marginBottom: Spacing.four,
-    gap: Spacing.two,
-  },
-  logoBadge: {
-    width: 72,
-    height: 72,
+  brand: { alignItems: 'center', gap: Spacing.two },
+  logoRing: {
+    width: 64, height: 64,
     borderRadius: Radius.xl,
     backgroundColor: Brand.accentMuted,
-    borderWidth: 2,
+    borderWidth: 1.5,
     borderColor: Brand.accentBorder,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.one,
     ...Shadow.accent,
   },
-  logoText: { fontSize: 36 },
-  appName: {
-    color: Brand.textPrimary,
-    fontSize: 26,
-    fontWeight: '800',
-    letterSpacing: -0.5,
-  },
-  appTagline: {
-    color: Brand.textSecondary,
-    fontSize: 13,
-    textAlign: 'center',
-    paddingHorizontal: Spacing.four,
-  },
+  wordmark: { color: Brand.textPrimary, fontSize: 30, fontWeight: '800', letterSpacing: -1 },
+  tagline:  { color: Brand.textSecondary, fontSize: 13 },
 
-  // Card
   card: {
     backgroundColor: Brand.bg2,
     borderRadius: Radius.xl,
@@ -247,147 +244,98 @@ const styles = StyleSheet.create({
     borderColor: Brand.bg3,
     ...Shadow.card,
   },
+  cardHeading: { color: Brand.textPrimary, fontSize: 22, fontWeight: '800', letterSpacing: -0.4 },
+  cardSub:     { color: Brand.textSecondary, fontSize: 14, marginTop: -Spacing.two },
 
-  // Error
   errorBox: {
-    backgroundColor: 'rgba(224,82,82,0.12)',
-    borderRadius: Radius.md,
-    padding: Spacing.two + 4,
-    borderWidth: 1,
-    borderColor: 'rgba(224,82,82,0.3)',
-  },
-  errorText: {
-    color: Brand.error,
-    fontSize: 13,
-    fontWeight: '600',
-  },
-
-  // Field
-  fieldWrap: { gap: Spacing.one },
-  fieldLabel: {
-    color: Brand.textSecondary,
-    fontSize: 11,
-    fontWeight: '700',
-    letterSpacing: 1.1,
-  },
-  inputWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: Brand.bg1,
+    gap: Spacing.one + 2,
+    backgroundColor: 'rgba(224,92,92,0.10)',
+    borderRadius: Radius.sm,
+    padding: Spacing.two + 4,
+    borderWidth: 1,
+    borderColor: 'rgba(224,92,92,0.25)',
+  },
+  errorText: { color: Brand.error, fontSize: 13, fontWeight: '500', flex: 1 },
+
+  fieldGroup: { gap: Spacing.one + 2 },
+  label: { color: Brand.textSecondary, fontSize: 11, fontWeight: '700', letterSpacing: 1 },
+  inputRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Brand.bg3,
     borderRadius: Radius.md,
     borderWidth: 1,
-    borderColor: Brand.bg3,
+    borderColor: Brand.bg4,
     paddingHorizontal: Spacing.three,
     gap: Spacing.two,
-    height: 50,
+    height: 52,
   },
-  inputIcon: { fontSize: 16 },
-  input: {
-    flex: 1,
-    color: Brand.textPrimary,
-    fontSize: 15,
-    padding: 0,
-  },
+  input: { flex: 1, color: Brand.textPrimary, fontSize: 15, padding: 0 },
 
-  // Role selector
-  roleRow: {
-    flexDirection: 'row',
-    gap: Spacing.two,
-  },
+  // Role
+  roleRow: { flexDirection: 'row', gap: Spacing.two },
   roleCard: {
     flex: 1,
-    backgroundColor: Brand.bg1,
+    backgroundColor: Brand.bg3,
     borderRadius: Radius.lg,
     borderWidth: 1.5,
-    borderColor: Brand.bg3,
-    padding: Spacing.two + 4,
+    borderColor: Brand.bg4,
+    padding: Spacing.three,
     alignItems: 'center',
-    gap: 4,
+    gap: Spacing.one,
     position: 'relative',
   },
-  roleCardActive: {
-    borderColor: Brand.accent,
-    backgroundColor: Brand.accentMuted,
+  roleCardActive: { borderColor: Brand.accent, backgroundColor: Brand.accentMuted },
+  roleIconWrap: {
+    width: 40, height: 40,
+    borderRadius: Radius.md,
+    backgroundColor: Brand.bg4,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: Spacing.one,
   },
-  roleEmoji: { fontSize: 26, marginBottom: 2 },
-  roleLabel: {
-    color: Brand.textSecondary,
-    fontSize: 13,
-    fontWeight: '700',
-  },
-  roleLabelActive: {
-    color: Brand.accent,
-  },
-  roleDesc: {
-    color: Brand.textMuted,
-    fontSize: 10,
-    textAlign: 'center',
-    lineHeight: 14,
-  },
-  checkBadge: {
-    position: 'absolute',
-    top: 6,
-    right: 6,
-    width: 18,
-    height: 18,
+  roleIconWrapActive: { backgroundColor: Brand.accent, ...Shadow.accent },
+  roleLabel:        { color: Brand.textSecondary, fontSize: 13, fontWeight: '700' },
+  roleLabelActive:  { color: Brand.textPrimary },
+  roleDesc:         { color: Brand.textMuted, fontSize: 10, textAlign: 'center', lineHeight: 14 },
+  checkMark: {
+    position: 'absolute', top: 8, right: 8,
+    width: 18, height: 18,
     borderRadius: Radius.full,
     backgroundColor: Brand.accent,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  checkText: {
-    color: Brand.black,
-    fontSize: 10,
-    fontWeight: '800',
-  },
 
-  // OTP hint
-  otpHintBox: {
+  // Info box
+  infoBox: {
+    flexDirection: 'row',
+    gap: Spacing.one + 2,
+    alignItems: 'flex-start',
     backgroundColor: Brand.accentMuted,
     borderRadius: Radius.md,
     padding: Spacing.two + 4,
     borderWidth: 1,
     borderColor: Brand.accentBorder,
   },
-  otpHintText: {
-    color: Brand.textSecondary,
-    fontSize: 12,
-    lineHeight: 18,
-  },
-  otpCode: {
-    color: Brand.accent,
-    fontWeight: '800',
-  },
+  infoText: { color: Brand.textSecondary, fontSize: 12, lineHeight: 18, flex: 1 },
+  infoCode: { color: Brand.accent, fontWeight: '700' },
 
-  // Submit
-  submitBtn: {
+  cta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: Spacing.two,
     backgroundColor: Brand.accent,
     borderRadius: Radius.md,
-    height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
+    height: 54,
     ...Shadow.accent,
   },
-  submitText: {
-    color: Brand.black,
-    fontWeight: '800',
-    fontSize: 16,
-    letterSpacing: 0.3,
-  },
+  ctaText: { color: Brand.white, fontWeight: '800', fontSize: 16, letterSpacing: 0.2 },
 
-  // Footer
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  footerText: {
-    color: Brand.textSecondary,
-    fontSize: 13,
-  },
-  footerLink: {
-    color: Brand.accent,
-    fontSize: 13,
-    fontWeight: '700',
-  },
+  footer: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  footerText: { color: Brand.textSecondary, fontSize: 14 },
+  footerLink: { color: Brand.accent, fontSize: 14, fontWeight: '700' },
 });

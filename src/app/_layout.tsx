@@ -27,7 +27,7 @@ function AuthGate() {
   if (isLoading) {
     return (
       <ThemedView style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color="#C9A84C" />
+        <ActivityIndicator size="large" color="#4361EE" />
       </ThemedView>
     );
   }

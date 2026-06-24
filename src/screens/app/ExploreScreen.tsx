@@ -1,78 +1,82 @@
 import React from 'react';
 import { StyleSheet, ScrollView, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing, Radius, Shadow, MaxContentWidth } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-const TOPICS = [
+type IoniconName = keyof typeof Ionicons.glyphMap;
+
+const TOPICS: { icon: IoniconName; title: string; description: string; color: string }[] = [
   {
-    emoji: '🔄',
+    icon: 'sync-circle-outline',
     title: 'How Ekub Works',
     description:
-      'Ekub is a traditional rotational savings circle. Members contribute a fixed amount each period. Every round, one member wins the entire pool through a transparent draw.',
-    accent: '#1C3A2A',
+      'Ekub is a traditional rotational savings circle. Members contribute a fixed amount each period, and one member wins the entire pool through a transparent draw each round.',
+    color: Brand.accent,
   },
   {
-    emoji: '🎲',
+    icon: 'dice-outline',
     title: 'Fair Draws & Rotations',
     description:
-      'Draws use a secure, transparent lottery system. Each member is guaranteed to receive the pool exactly once per cycle — no favourites, no cheating.',
-    accent: '#1C2A3A',
+      'Draws use a secure, transparent lottery system. Each member is guaranteed to receive the pool exactly once per cycle — no favourites, no bias.',
+    color: '#27AE78',
   },
   {
-    emoji: '💳',
+    icon: 'card-outline',
     title: 'Seamless Payments',
     description:
-      'Contributions are collected via Telebirr, CBE Birr, or bank transfer and held in a secure custody account until disbursed after the draw.',
-    accent: '#3A2E1C',
+      'Contributions collected via Telebirr, CBE Birr, or bank transfer are held in a secure custody account and disbursed automatically after each draw.',
+    color: '#E0A34A',
   },
   {
-    emoji: '🤝',
+    icon: 'shield-checkmark-outline',
     title: 'Trust & Reputation',
     description:
       'Members build a credit and trust score based on timely contributions. High scores unlock access to premium, high-value ekub groups.',
-    accent: '#2A1C3A',
+    color: '#A259F7',
   },
 ];
 
 export default function ExploreScreen() {
   return (
     <View style={styles.root}>
-      <SafeAreaView style={styles.safeArea} edges={['top']}>
+      <SafeAreaView style={styles.safe} edges={['top']}>
         <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}>
 
           {/* Header */}
-          <View style={styles.header}>
-            <ThemedText style={styles.title}>Explore Ekub</ThemedText>
-            <ThemedText style={styles.subtitle}>
-              Learn how rotational savings work and grow your wealth together
+          <View style={styles.pageHeader}>
+            <ThemedText style={styles.pageTitle}>Explore Ekub</ThemedText>
+            <ThemedText style={styles.pageSubtitle}>
+              Learn how rotational savings work and why thousands trust it.
             </ThemedText>
           </View>
 
           {/* Topics */}
-          {TOPICS.map((topic, i) => (
-            <View key={i} style={[styles.card, { backgroundColor: topic.accent }]}>
-              <View style={styles.cardEmojiWrap}>
-                <ThemedText style={styles.cardEmoji}>{topic.emoji}</ThemedText>
+          {TOPICS.map((t, i) => (
+            <View key={i} style={styles.topicCard}>
+              <View style={[styles.topicIconWrap, { backgroundColor: t.color + '22', borderColor: t.color + '44' }]}>
+                <Ionicons name={t.icon} size={24} color={t.color} />
               </View>
-              <View style={{ flex: 1 }}>
-                <ThemedText style={styles.cardTitle}>{topic.title}</ThemedText>
-                <ThemedText style={styles.cardDesc}>{topic.description}</ThemedText>
+              <View style={{ flex: 1, gap: 6 }}>
+                <ThemedText style={styles.topicTitle}>{t.title}</ThemedText>
+                <ThemedText style={styles.topicDesc}>{t.description}</ThemedText>
               </View>
             </View>
           ))}
 
-          {/* CTA Banner */}
-          <View style={styles.ctaBanner}>
-            <ThemedText style={styles.ctaTitle}>🚀 Ready to start saving?</ThemedText>
+          {/* CTA */}
+          <View style={styles.ctaCard}>
+            <Ionicons name="rocket-outline" size={28} color={Brand.accent} />
+            <ThemedText style={styles.ctaTitle}>Ready to start saving?</ThemedText>
             <ThemedText style={styles.ctaDesc}>
               Go to Home and join or create your first ekub group today.
             </ThemedText>
           </View>
 
-          <View style={{ height: Spacing.six }} />
+          <View style={{ height: Spacing.seven }} />
         </ScrollView>
       </SafeAreaView>
     </View>
@@ -80,89 +84,46 @@ export default function ExploreScreen() {
 }
 
 const styles = StyleSheet.create({
-  root: {
-    flex: 1,
-    backgroundColor: Brand.bg1,
-  },
-  safeArea: {
-    flex: 1,
-    alignSelf: 'center',
-    width: '100%',
-    maxWidth: MaxContentWidth,
-  },
-  scroll: {
-    paddingHorizontal: Spacing.three,
-    paddingTop: Spacing.two,
-    gap: Spacing.three,
-  },
+  root: { flex: 1, backgroundColor: Brand.bg0 },
+  safe: { flex: 1, alignSelf: 'center', width: '100%', maxWidth: MaxContentWidth },
+  scroll: { paddingHorizontal: Spacing.three, paddingTop: Spacing.two, gap: Spacing.three },
 
-  header: {
-    paddingVertical: Spacing.two,
-    gap: Spacing.one,
-  },
-  title: {
-    color: Brand.textPrimary,
-    fontSize: 26,
-    fontWeight: '800',
-    letterSpacing: -0.4,
-  },
-  subtitle: {
-    color: Brand.textSecondary,
-    fontSize: 14,
-    lineHeight: 20,
-  },
+  pageHeader: { paddingTop: Spacing.two, gap: Spacing.one },
+  pageTitle: { color: Brand.textPrimary, fontSize: 26, fontWeight: '800', letterSpacing: -0.5 },
+  pageSubtitle: { color: Brand.textSecondary, fontSize: 14, lineHeight: 20 },
 
-  card: {
+  topicCard: {
     flexDirection: 'row',
+    gap: Spacing.three,
+    backgroundColor: Brand.bg2,
     borderRadius: Radius.lg,
     padding: Spacing.three,
-    gap: Spacing.three,
-    alignItems: 'flex-start',
     borderWidth: 1,
-    borderColor: 'rgba(255,255,255,0.05)',
-    ...Shadow.card,
+    borderColor: Brand.bg3,
+    alignItems: 'flex-start',
+    ...Shadow.sm,
   },
-  cardEmojiWrap: {
-    width: 48,
-    height: 48,
+  topicIconWrap: {
+    width: 50, height: 50,
     borderRadius: Radius.md,
-    backgroundColor: 'rgba(0,0,0,0.25)',
+    borderWidth: 1,
     justifyContent: 'center',
     alignItems: 'center',
+    flexShrink: 0,
   },
-  cardEmoji: { fontSize: 24 },
-  cardTitle: {
-    color: Brand.textPrimary,
-    fontSize: 15,
-    fontWeight: '700',
-    marginBottom: 4,
-  },
-  cardDesc: {
-    color: Brand.textSecondary,
-    fontSize: 13,
-    lineHeight: 20,
-  },
+  topicTitle: { color: Brand.textPrimary, fontSize: 15, fontWeight: '700' },
+  topicDesc: { color: Brand.textSecondary, fontSize: 13, lineHeight: 20 },
 
-  ctaBanner: {
+  ctaCard: {
     backgroundColor: Brand.accentMuted,
     borderRadius: Radius.xl,
-    padding: Spacing.four,
+    padding: Spacing.four + Spacing.one,
     borderWidth: 1,
     borderColor: Brand.accentBorder,
-    gap: Spacing.one,
     alignItems: 'center',
+    gap: Spacing.two,
     ...Shadow.accent,
   },
-  ctaTitle: {
-    color: Brand.accent,
-    fontSize: 18,
-    fontWeight: '800',
-    textAlign: 'center',
-  },
-  ctaDesc: {
-    color: Brand.textSecondary,
-    fontSize: 13,
-    textAlign: 'center',
-    lineHeight: 20,
-  },
+  ctaTitle: { color: Brand.textPrimary, fontSize: 18, fontWeight: '800', textAlign: 'center' },
+  ctaDesc: { color: Brand.textSecondary, fontSize: 13, textAlign: 'center', lineHeight: 20 },
 });

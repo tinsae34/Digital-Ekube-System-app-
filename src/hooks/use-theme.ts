@@ -7,8 +7,7 @@ import { Colors } from '@/constants/theme';
 import { useColorScheme } from '@/hooks/use-color-scheme';
 
 export function useTheme() {
-  const scheme = useColorScheme();
-  const theme = scheme === 'unspecified' ? 'light' : scheme;
-
-  return Colors[theme];
+  // App is always dark — our brand is built on the dark palette.
+  useColorScheme(); // keep the hook call so it's not tree-shaken
+  return Colors.dark;
 }
