@@ -1,115 +1,168 @@
 import React from 'react';
-import { StyleSheet, ScrollView, View, useColorScheme, Platform } from 'react-native';
+import { StyleSheet, ScrollView, View } from 'react-native';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Colors, Spacing, MaxContentWidth } from '@/constants/theme';
+import { Brand, Spacing, Radius, Shadow, MaxContentWidth } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+const TOPICS = [
+  {
+    emoji: '🔄',
+    title: 'How Ekub Works',
+    description:
+      'Ekub is a traditional rotational savings circle. Members contribute a fixed amount each period. Every round, one member wins the entire pool through a transparent draw.',
+    accent: '#1C3A2A',
+  },
+  {
+    emoji: '🎲',
+    title: 'Fair Draws & Rotations',
+    description:
+      'Draws use a secure, transparent lottery system. Each member is guaranteed to receive the pool exactly once per cycle — no favourites, no cheating.',
+    accent: '#1C2A3A',
+  },
+  {
+    emoji: '💳',
+    title: 'Seamless Payments',
+    description:
+      'Contributions are collected via Telebirr, CBE Birr, or bank transfer and held in a secure custody account until disbursed after the draw.',
+    accent: '#3A2E1C',
+  },
+  {
+    emoji: '🤝',
+    title: 'Trust & Reputation',
+    description:
+      'Members build a credit and trust score based on timely contributions. High scores unlock access to premium, high-value ekub groups.',
+    accent: '#2A1C3A',
+  },
+];
+
 export default function ExploreScreen() {
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
-
-  const topics = [
-    {
-      title: '🔄 How Ekub Works',
-      description: 'Ekub is a traditional rotational savings association. Group members contribute a fixed amount periodically. Every period, a draw is held, and one member receives the entire pool.'
-    },
-    {
-      title: '🎲 Fair Draws & Rotations',
-      description: 'The drawing order is determined using a transparent, secure lottery system in the app. Each member is guaranteed to receive the pool exactly once during the cycle.'
-    },
-    {
-      title: '💳 Seamless Mobile Payments',
-      description: 'Contributions are collected via integrated payment methods (such as Telebirr or CBE Birr) and stored in a secure custody account until the draw is disbursed.'
-    },
-    {
-      title: '🤝 Trust & Reputation',
-      description: 'Members build an on-chain credit and trust score based on their history of timely contributions. High scores allow entry into high-value premium groups.'
-    }
-  ];
-
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-          
+    <View style={styles.root}>
+      <SafeAreaView style={styles.safeArea} edges={['top']}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}>
+
+          {/* Header */}
           <View style={styles.header}>
-            <ThemedText type="subtitle" style={styles.title}>
-              Explore Digital Ekub
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
-              Learn more about rules, rotations, and secure savings pools
+            <ThemedText style={styles.title}>Explore Ekub</ThemedText>
+            <ThemedText style={styles.subtitle}>
+              Learn how rotational savings work and grow your wealth together
             </ThemedText>
           </View>
 
-          <View style={styles.topicsList}>
-            {topics.map((topic, index) => (
-              <ThemedView
-                key={index}
-                type="backgroundElement"
-                style={styles.topicCard}>
-                <ThemedText type="smallBold" style={styles.topicTitle}>{topic.title}</ThemedText>
-                <ThemedText type="small" themeColor="textSecondary" style={styles.topicDescription}>
-                  {topic.description}
-                </ThemedText>
-              </ThemedView>
-            ))}
+          {/* Topics */}
+          {TOPICS.map((topic, i) => (
+            <View key={i} style={[styles.card, { backgroundColor: topic.accent }]}>
+              <View style={styles.cardEmojiWrap}>
+                <ThemedText style={styles.cardEmoji}>{topic.emoji}</ThemedText>
+              </View>
+              <View style={{ flex: 1 }}>
+                <ThemedText style={styles.cardTitle}>{topic.title}</ThemedText>
+                <ThemedText style={styles.cardDesc}>{topic.description}</ThemedText>
+              </View>
+            </View>
+          ))}
+
+          {/* CTA Banner */}
+          <View style={styles.ctaBanner}>
+            <ThemedText style={styles.ctaTitle}>🚀 Ready to start saving?</ThemedText>
+            <ThemedText style={styles.ctaDesc}>
+              Go to Home and join or create your first ekub group today.
+            </ThemedText>
           </View>
 
+          <View style={{ height: Spacing.six }} />
         </ScrollView>
       </SafeAreaView>
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
+    backgroundColor: Brand.bg1,
   },
   safeArea: {
     flex: 1,
-    maxWidth: MaxContentWidth,
+    alignSelf: 'center',
     width: '100%',
+    maxWidth: MaxContentWidth,
   },
-  scrollContent: {
-    padding: Spacing.three,
-    gap: Spacing.four,
+  scroll: {
+    paddingHorizontal: Spacing.three,
+    paddingTop: Spacing.two,
+    gap: Spacing.three,
   },
+
   header: {
-    alignItems: 'center',
-    paddingVertical: Spacing.three,
+    paddingVertical: Spacing.two,
     gap: Spacing.one,
   },
   title: {
-    fontSize: 22,
+    color: Brand.textPrimary,
+    fontSize: 26,
+    fontWeight: '800',
+    letterSpacing: -0.4,
+  },
+  subtitle: {
+    color: Brand.textSecondary,
+    fontSize: 14,
+    lineHeight: 20,
+  },
+
+  card: {
+    flexDirection: 'row',
+    borderRadius: Radius.lg,
+    padding: Spacing.three,
+    gap: Spacing.three,
+    alignItems: 'flex-start',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.05)',
+    ...Shadow.card,
+  },
+  cardEmojiWrap: {
+    width: 48,
+    height: 48,
+    borderRadius: Radius.md,
+    backgroundColor: 'rgba(0,0,0,0.25)',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cardEmoji: { fontSize: 24 },
+  cardTitle: {
+    color: Brand.textPrimary,
+    fontSize: 15,
+    fontWeight: '700',
+    marginBottom: 4,
+  },
+  cardDesc: {
+    color: Brand.textSecondary,
+    fontSize: 13,
+    lineHeight: 20,
+  },
+
+  ctaBanner: {
+    backgroundColor: Brand.accentMuted,
+    borderRadius: Radius.xl,
+    padding: Spacing.four,
+    borderWidth: 1,
+    borderColor: Brand.accentBorder,
+    gap: Spacing.one,
+    alignItems: 'center',
+    ...Shadow.accent,
+  },
+  ctaTitle: {
+    color: Brand.accent,
+    fontSize: 18,
     fontWeight: '800',
     textAlign: 'center',
   },
-  subtitle: {
+  ctaDesc: {
+    color: Brand.textSecondary,
+    fontSize: 13,
     textAlign: 'center',
-    lineHeight: 18,
-  },
-  topicsList: {
-    gap: Spacing.three,
-  },
-  topicCard: {
-    padding: Spacing.four,
-    borderRadius: 20,
-    gap: Spacing.two,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.02,
-    shadowRadius: 8,
-    elevation: 1,
-  },
-  topicTitle: {
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  topicDescription: {
     lineHeight: 20,
-    fontSize: 14,
   },
 });

@@ -4,7 +4,6 @@ import {
   TextInput,
   Pressable,
   ActivityIndicator,
-  useColorScheme,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,244 +12,177 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/services/authContext';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Colors, Spacing } from '@/constants/theme';
+import { Brand, Spacing, Radius, Shadow } from '@/constants/theme';
+
+type AuthMode = 'password' | 'otp';
 
 export default function LoginScreen() {
   const router = useRouter();
   const { login } = useAuth();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [otp, setOtp] = useState('123456'); // Pre-fill with placeholder OTP for convenience
-  const [authMode, setAuthMode] = useState<'password' | 'otp'>('password');
+  const [otp, setOtp] = useState('');
+  const [authMode, setAuthMode] = useState<AuthMode>('password');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   const handleLogin = async () => {
-    if (!phone) {
-      setError('Please enter your phone number.');
-      return;
-    }
-    
-    if (authMode === 'password' && !password) {
-      setError('Please enter your password.');
-      return;
-    }
+    if (!phone) { setError('Please enter your phone number.'); return; }
+    if (authMode === 'password' && !password) { setError('Please enter your password.'); return; }
+    if (authMode === 'otp' && !otp) { setError('Please enter the OTP code.'); return; }
 
-    if (authMode === 'otp' && !otp) {
-      setError('Please enter your OTP code.');
-      return;
-    }
-    
     setError(null);
     setLoading(true);
     try {
-      if (authMode === 'password') {
-        await login(phone, password, undefined);
-      } else {
-        await login(phone, undefined, otp);
-      }
+      await login(phone, authMode === 'password' ? password : undefined, authMode === 'otp' ? otp : undefined);
       router.replace('/(app)');
     } catch (err: any) {
-      setError(err?.message || 'Failed to sign in. Please check your credentials.');
+      setError(err?.message || 'Sign in failed. Please check your credentials.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <View style={styles.root}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}>
+        style={{ flex: 1 }}>
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          
-          <View style={styles.header}>
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+
+          {/* ── Logo ── */}
+          <View style={styles.logoWrap}>
             <View style={styles.logoBadge}>
-              <ThemedText style={styles.logoText}>🇪</ThemedText>
+              <ThemedText style={styles.logoText}>🏦</ThemedText>
             </View>
-            <ThemedText type="title" style={styles.title}>
-              Digital Ekub
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
-              Save and pool money securely with your trusted groups
+            <ThemedText style={styles.appName}>Digital Ekub</ThemedText>
+            <ThemedText style={styles.appTagline}>
+              Save and grow together
             </ThemedText>
           </View>
 
-          <ThemedView type="backgroundElement" style={styles.card}>
-            <ThemedText type="subtitle" style={styles.cardTitle}>
-              Welcome Back
+          {/* ── Card ── */}
+          <View style={styles.card}>
+            <ThemedText style={styles.cardTitle}>Welcome back</ThemedText>
+            <ThemedText style={styles.cardSubtitle}>
+              Sign in to your account
             </ThemedText>
 
-            {/* Password vs OTP Mode Selector */}
-            <View style={[
-              styles.modeSelector,
-              { backgroundColor: colorScheme === 'dark' ? '#18191B' : '#E6E7EB' }
-            ]}>
-              <Pressable
-                style={[
-                  styles.modeButton,
-                  authMode === 'password' && {
-                    backgroundColor: colorScheme === 'dark' ? '#2E3135' : '#FFFFFF',
-                  }
-                ]}
-                onPress={() => {
-                  setError(null);
-                  setAuthMode('password');
-                }}>
-                <ThemedText type={authMode === 'password' ? 'smallBold' : 'small'}>
-                  Password
-                </ThemedText>
-              </Pressable>
-              
-              <Pressable
-                style={[
-                  styles.modeButton,
-                  authMode === 'otp' && {
-                    backgroundColor: colorScheme === 'dark' ? '#2E3135' : '#FFFFFF',
-                  }
-                ]}
-                onPress={() => {
-                  setError(null);
-                  setAuthMode('otp');
-                }}>
-                <ThemedText type={authMode === 'otp' ? 'smallBold' : 'small'}>
-                  OTP Placeholder
-                </ThemedText>
-              </Pressable>
+            {/* Mode toggle */}
+            <View style={styles.modeToggle}>
+              {(['password', 'otp'] as AuthMode[]).map(mode => (
+                <Pressable
+                  key={mode}
+                  style={[styles.modeBtn, authMode === mode && styles.modeBtnActive]}
+                  onPress={() => { setError(null); setAuthMode(mode); }}>
+                  <ThemedText style={[styles.modeBtnText, authMode === mode && styles.modeBtnTextActive]}>
+                    {mode === 'password' ? '🔒 Password' : '📱 OTP Code'}
+                  </ThemedText>
+                </Pressable>
+              ))}
             </View>
-            
+
+            {/* Error */}
             {error && (
               <View style={styles.errorBox}>
-                <ThemedText style={styles.errorText}>{error}</ThemedText>
+                <ThemedText style={styles.errorText}>⚠️ {error}</ThemedText>
               </View>
             )}
 
-            <View style={styles.inputContainer}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                PHONE NUMBER
-              </ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    color: theme.text,
-                    backgroundColor: colorScheme === 'dark' ? '#18191B' : '#E6E7EB',
-                    borderColor: colorScheme === 'dark' ? '#2E3135' : '#D1D3D8',
-                  },
-                ]}
-                placeholder="e.g. +251912345678"
-                placeholderTextColor={colorScheme === 'dark' ? '#80848C' : '#90949C'}
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-                autoCapitalize="none"
-              />
+            {/* Phone */}
+            <View style={styles.fieldWrap}>
+              <ThemedText style={styles.fieldLabel}>PHONE NUMBER</ThemedText>
+              <View style={styles.inputWrap}>
+                <ThemedText style={styles.inputIcon}>📞</ThemedText>
+                <TextInput
+                  style={styles.input}
+                  placeholder="+251 9XX XXX XXX"
+                  placeholderTextColor={Brand.textMuted}
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  autoCapitalize="none"
+                />
+              </View>
             </View>
 
+            {/* Password or OTP */}
             {authMode === 'password' ? (
-              <View style={styles.inputContainer}>
-                <ThemedText type="smallBold" themeColor="textSecondary">
-                  PASSWORD
-                </ThemedText>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      color: theme.text,
-                      backgroundColor: colorScheme === 'dark' ? '#18191B' : '#E6E7EB',
-                      borderColor: colorScheme === 'dark' ? '#2E3135' : '#D1D3D8',
-                    },
-                  ]}
-                  placeholder="Enter your password"
-                  placeholderTextColor={colorScheme === 'dark' ? '#80848C' : '#90949C'}
-                  value={password}
-                  onChangeText={setPassword}
-                  secureTextEntry
-                  autoCapitalize="none"
-                />
+              <View style={styles.fieldWrap}>
+                <ThemedText style={styles.fieldLabel}>PASSWORD</ThemedText>
+                <View style={styles.inputWrap}>
+                  <ThemedText style={styles.inputIcon}>🔑</ThemedText>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Enter your password"
+                    placeholderTextColor={Brand.textMuted}
+                    value={password}
+                    onChangeText={setPassword}
+                    secureTextEntry
+                    autoCapitalize="none"
+                  />
+                </View>
               </View>
             ) : (
-              <View style={styles.inputContainer}>
-                <View style={styles.otpHeader}>
-                  <ThemedText type="smallBold" themeColor="textSecondary">
-                    OTP CODE
-                  </ThemedText>
-                  <ThemedText type="small" themeColor="textSecondary" style={styles.otpHint}>
-                    (Use placeholder: 123456)
-                  </ThemedText>
+              <View style={styles.fieldWrap}>
+                <View style={styles.fieldLabelRow}>
+                  <ThemedText style={styles.fieldLabel}>OTP CODE</ThemedText>
+                  <ThemedText style={styles.fieldHint}>placeholder: 123456</ThemedText>
                 </View>
-                <TextInput
-                  style={[
-                    styles.input,
-                    {
-                      color: theme.text,
-                      backgroundColor: colorScheme === 'dark' ? '#18191B' : '#E6E7EB',
-                      borderColor: colorScheme === 'dark' ? '#2E3135' : '#D1D3D8',
-                    },
-                  ]}
-                  placeholder="Enter 6-digit OTP code"
-                  placeholderTextColor={colorScheme === 'dark' ? '#80848C' : '#90949C'}
-                  value={otp}
-                  onChangeText={setOtp}
-                  keyboardType="number-pad"
-                  maxLength={6}
-                  autoCapitalize="none"
-                />
+                <View style={styles.inputWrap}>
+                  <ThemedText style={styles.inputIcon}>🔢</ThemedText>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="6-digit code"
+                    placeholderTextColor={Brand.textMuted}
+                    value={otp}
+                    onChangeText={setOtp}
+                    keyboardType="number-pad"
+                    maxLength={6}
+                  />
+                </View>
               </View>
             )}
 
+            {/* Submit */}
             <Pressable
-              style={({ pressed }) => [
-                styles.button,
-                {
-                  backgroundColor: '#4A3AFF',
-                  opacity: pressed || loading ? 0.8 : 1,
-                },
-              ]}
+              style={({ pressed }) => [styles.submitBtn, { opacity: pressed || loading ? 0.8 : 1 }]}
               onPress={handleLogin}
               disabled={loading}>
               {loading ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
+                <ActivityIndicator color={Brand.black} size="small" />
               ) : (
-                <ThemedText style={styles.buttonText}>
-                  {authMode === 'password' ? 'Sign In with Password' : 'Sign In with OTP'}
+                <ThemedText style={styles.submitText}>
+                  Sign In
                 </ThemedText>
               )}
             </Pressable>
 
+            {/* Footer */}
             <View style={styles.footer}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Don't have an account?{' '}
-              </ThemedText>
+              <ThemedText style={styles.footerText}>Don't have an account? </ThemedText>
               <Pressable onPress={() => router.push('/(auth)/register')}>
-                <ThemedText type="smallBold" style={styles.linkText}>
-                  Register here
-                </ThemedText>
+                <ThemedText style={styles.footerLink}>Register here</ThemedText>
               </Pressable>
             </View>
-          </ThemedView>
+          </View>
 
         </ScrollView>
       </KeyboardAvoidingView>
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: Brand.bg1,
   },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
+  scroll: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: Spacing.four,
@@ -258,118 +190,166 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
   },
-  header: {
+
+  // Logo
+  logoWrap: {
     alignItems: 'center',
     marginBottom: Spacing.five,
     gap: Spacing.two,
   },
   logoBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: '#4A3AFF',
+    width: 72,
+    height: 72,
+    borderRadius: Radius.xl,
+    backgroundColor: Brand.accentMuted,
+    borderWidth: 2,
+    borderColor: Brand.accentBorder,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.two,
-    shadowColor: '#4A3AFF',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
+    marginBottom: Spacing.one,
+    ...Shadow.accent,
   },
-  logoText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  title: {
-    fontSize: 28,
+  logoText: { fontSize: 36 },
+  appName: {
+    color: Brand.textPrimary,
+    fontSize: 26,
     fontWeight: '800',
-    textAlign: 'center',
+    letterSpacing: -0.5,
   },
-  subtitle: {
-    textAlign: 'center',
-    paddingHorizontal: Spacing.three,
-    lineHeight: 18,
+  appTagline: {
+    color: Brand.textSecondary,
+    fontSize: 14,
   },
+
+  // Card
   card: {
+    backgroundColor: Brand.bg2,
+    borderRadius: Radius.xl,
     padding: Spacing.four,
-    borderRadius: 24,
     gap: Spacing.three,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 4,
+    borderWidth: 1,
+    borderColor: Brand.bg3,
+    ...Shadow.card,
   },
   cardTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    marginBottom: Spacing.one,
+    color: Brand.textPrimary,
+    fontSize: 22,
+    fontWeight: '800',
   },
-  modeSelector: {
+  cardSubtitle: {
+    color: Brand.textSecondary,
+    fontSize: 14,
+    marginTop: -Spacing.two,
+  },
+
+  // Mode toggle
+  modeToggle: {
     flexDirection: 'row',
-    borderRadius: 12,
+    backgroundColor: Brand.bg1,
+    borderRadius: Radius.md,
     padding: 4,
-    marginBottom: Spacing.one,
+    gap: 4,
   },
-  modeButton: {
+  modeBtn: {
     flex: 1,
-    height: 36,
-    justifyContent: 'center',
+    paddingVertical: Spacing.one + 2,
+    borderRadius: Radius.sm + 2,
     alignItems: 'center',
-    borderRadius: 8,
   },
+  modeBtnActive: {
+    backgroundColor: Brand.accent,
+  },
+  modeBtnText: {
+    color: Brand.textSecondary,
+    fontSize: 13,
+    fontWeight: '600',
+  },
+  modeBtnTextActive: {
+    color: Brand.black,
+    fontWeight: '800',
+  },
+
+  // Error
   errorBox: {
-    backgroundColor: '#FFEBEE',
-    padding: Spacing.three,
-    borderRadius: 12,
+    backgroundColor: 'rgba(224,82,82,0.12)',
+    borderRadius: Radius.md,
+    padding: Spacing.two + 4,
     borderWidth: 1,
-    borderColor: '#FFCDD2',
+    borderColor: 'rgba(224,82,82,0.3)',
   },
   errorText: {
-    color: '#D32F2F',
+    color: Brand.error,
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  inputContainer: {
-    gap: Spacing.one,
-  },
-  otpHeader: {
+
+  // Field
+  fieldWrap: { gap: Spacing.one },
+  fieldLabelRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
-  otpHint: {
+  fieldLabel: {
+    color: Brand.textSecondary,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.1,
+  },
+  fieldHint: {
+    color: Brand.accent,
     fontSize: 11,
     fontStyle: 'italic',
   },
-  input: {
-    height: 48,
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Brand.bg1,
+    borderRadius: Radius.md,
     borderWidth: 1,
-    borderRadius: 12,
+    borderColor: Brand.bg3,
     paddingHorizontal: Spacing.three,
-    fontSize: 15,
+    gap: Spacing.two,
+    height: 50,
   },
-  button: {
-    height: 48,
-    borderRadius: 12,
+  inputIcon: { fontSize: 16 },
+  input: {
+    flex: 1,
+    color: Brand.textPrimary,
+    fontSize: 15,
+    padding: 0,
+  },
+
+  // Submit button
+  submitBtn: {
+    backgroundColor: Brand.accent,
+    borderRadius: Radius.md,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: Spacing.two,
+    marginTop: Spacing.one,
+    ...Shadow.accent,
   },
-  buttonText: {
-    color: '#FFFFFF',
-    fontWeight: '700',
+  submitText: {
+    color: Brand.black,
+    fontWeight: '800',
     fontSize: 16,
+    letterSpacing: 0.3,
   },
+
+  // Footer
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: Spacing.two,
   },
-  linkText: {
-    color: '#4A3AFF',
+  footerText: {
+    color: Brand.textSecondary,
+    fontSize: 13,
+  },
+  footerLink: {
+    color: Brand.accent,
+    fontSize: 13,
+    fontWeight: '700',
   },
 });

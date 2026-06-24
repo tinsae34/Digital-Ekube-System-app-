@@ -4,7 +4,6 @@ import {
   TextInput,
   Pressable,
   ActivityIndicator,
-  useColorScheme,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -13,19 +12,23 @@ import {
 import { useRouter } from 'expo-router';
 import { useAuth } from '@/services/authContext';
 import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { Colors, Spacing } from '@/constants/theme';
+import { Brand, Spacing, Radius, Shadow } from '@/constants/theme';
+
+const ROLES = [
+  { value: 'user',  label: 'Member',   emoji: '👤', desc: 'Join and participate in ekub groups' },
+  { value: 'admin', label: 'Organizer', emoji: '🔑', desc: 'Create and manage ekub groups' },
+] as const;
+
+type Role = 'user' | 'admin';
 
 export default function RegisterScreen() {
   const router = useRouter();
   const { register } = useAuth();
-  const colorScheme = useColorScheme();
-  const theme = Colors[colorScheme === 'dark' ? 'dark' : 'light'];
 
   const [name, setName] = useState('');
   const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [role, setRole] = useState<'user' | 'admin'>('user');
+  const [role, setRole] = useState<Role>('user');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -34,192 +37,166 @@ export default function RegisterScreen() {
       setError('Please fill in all fields.');
       return;
     }
-    
     setError(null);
     setLoading(true);
     try {
       await register(phone, password, name, role);
       router.replace('/(app)');
     } catch (err: any) {
-      setError(err?.message || 'Failed to register account. Please try again.');
+      setError(err?.message || 'Registration failed. Please try again.');
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <ThemedView style={styles.container}>
+    <View style={styles.root}>
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}>
+        style={{ flex: 1 }}>
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}>
-          
-          <View style={styles.header}>
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled">
+
+          {/* ── Logo ── */}
+          <View style={styles.logoWrap}>
             <View style={styles.logoBadge}>
-              <ThemedText style={styles.logoText}>🇪</ThemedText>
+              <ThemedText style={styles.logoText}>🏦</ThemedText>
             </View>
-            <ThemedText type="title" style={styles.title}>
-              Create Account
-            </ThemedText>
-            <ThemedText type="small" themeColor="textSecondary" style={styles.subtitle}>
+            <ThemedText style={styles.appName}>Create Account</ThemedText>
+            <ThemedText style={styles.appTagline}>
               Join Digital Ekub and start saving together
             </ThemedText>
           </View>
 
-          <ThemedView type="backgroundElement" style={styles.card}>
+          {/* ── Card ── */}
+          <View style={styles.card}>
+
+            {/* Error */}
             {error && (
               <View style={styles.errorBox}>
-                <ThemedText style={styles.errorText}>{error}</ThemedText>
+                <ThemedText style={styles.errorText}>⚠️ {error}</ThemedText>
               </View>
             )}
 
-            <View style={styles.inputContainer}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                FULL NAME
-              </ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    color: theme.text,
-                    backgroundColor: colorScheme === 'dark' ? '#18191B' : '#E6E7EB',
-                    borderColor: colorScheme === 'dark' ? '#2E3135' : '#D1D3D8',
-                  },
-                ]}
-                placeholder="Enter your full name"
-                placeholderTextColor={colorScheme === 'dark' ? '#80848C' : '#90949C'}
-                value={name}
-                onChangeText={setName}
-                autoCapitalize="words"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                PHONE NUMBER
-              </ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    color: theme.text,
-                    backgroundColor: colorScheme === 'dark' ? '#18191B' : '#E6E7EB',
-                    borderColor: colorScheme === 'dark' ? '#2E3135' : '#D1D3D8',
-                  },
-                ]}
-                placeholder="e.g. +251912345678"
-                placeholderTextColor={colorScheme === 'dark' ? '#80848C' : '#90949C'}
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-                autoCapitalize="none"
-              />
-            </View>
-
-            <View style={styles.inputContainer}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                PASSWORD
-              </ThemedText>
-              <TextInput
-                style={[
-                  styles.input,
-                  {
-                    color: theme.text,
-                    backgroundColor: colorScheme === 'dark' ? '#18191B' : '#E6E7EB',
-                    borderColor: colorScheme === 'dark' ? '#2E3135' : '#D1D3D8',
-                  },
-                ]}
-                placeholder="Create a strong password"
-                placeholderTextColor={colorScheme === 'dark' ? '#80848C' : '#90949C'}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-                autoCapitalize="none"
-              />
-            </View>
-
-            {/* Role selection */}
-            <View style={styles.inputContainer}>
-              <ThemedText type="smallBold" themeColor="textSecondary">
-                ACCOUNT ROLE
-              </ThemedText>
-              <View style={styles.roleContainer}>
-                <Pressable
-                  style={[
-                    styles.roleCard,
-                    {
-                      borderColor: role === 'user' ? '#4A3AFF' : (colorScheme === 'dark' ? '#2E3135' : '#D1D3D8'),
-                      backgroundColor: role === 'user' ? 'rgba(74, 58, 255, 0.08)' : (colorScheme === 'dark' ? '#18191B' : '#E6E7EB'),
-                    }
-                  ]}
-                  onPress={() => setRole('user')}>
-                  <ThemedText type={role === 'user' ? 'smallBold' : 'small'} style={role === 'user' ? { color: '#4A3AFF' } : {}}>
-                    👤 Member (User)
-                  </ThemedText>
-                </Pressable>
-                
-                <Pressable
-                  style={[
-                    styles.roleCard,
-                    {
-                      borderColor: role === 'admin' ? '#4A3AFF' : (colorScheme === 'dark' ? '#2E3135' : '#D1D3D8'),
-                      backgroundColor: role === 'admin' ? 'rgba(74, 58, 255, 0.08)' : (colorScheme === 'dark' ? '#18191B' : '#E6E7EB'),
-                    }
-                  ]}
-                  onPress={() => setRole('admin')}>
-                  <ThemedText type={role === 'admin' ? 'smallBold' : 'small'} style={role === 'admin' ? { color: '#4A3AFF' } : {}}>
-                    🔑 Admin / Organizer
-                  </ThemedText>
-                </Pressable>
+            {/* Name */}
+            <View style={styles.fieldWrap}>
+              <ThemedText style={styles.fieldLabel}>FULL NAME</ThemedText>
+              <View style={styles.inputWrap}>
+                <ThemedText style={styles.inputIcon}>✏️</ThemedText>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Your full name"
+                  placeholderTextColor={Brand.textMuted}
+                  value={name}
+                  onChangeText={setName}
+                  autoCapitalize="words"
+                />
               </View>
             </View>
 
+            {/* Phone */}
+            <View style={styles.fieldWrap}>
+              <ThemedText style={styles.fieldLabel}>PHONE NUMBER</ThemedText>
+              <View style={styles.inputWrap}>
+                <ThemedText style={styles.inputIcon}>📞</ThemedText>
+                <TextInput
+                  style={styles.input}
+                  placeholder="+251 9XX XXX XXX"
+                  placeholderTextColor={Brand.textMuted}
+                  value={phone}
+                  onChangeText={setPhone}
+                  keyboardType="phone-pad"
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
+            {/* Password */}
+            <View style={styles.fieldWrap}>
+              <ThemedText style={styles.fieldLabel}>PASSWORD</ThemedText>
+              <View style={styles.inputWrap}>
+                <ThemedText style={styles.inputIcon}>🔑</ThemedText>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Create a strong password"
+                  placeholderTextColor={Brand.textMuted}
+                  value={password}
+                  onChangeText={setPassword}
+                  secureTextEntry
+                  autoCapitalize="none"
+                />
+              </View>
+            </View>
+
+            {/* Role selector */}
+            <View style={styles.fieldWrap}>
+              <ThemedText style={styles.fieldLabel}>ACCOUNT ROLE</ThemedText>
+              <View style={styles.roleRow}>
+                {ROLES.map(r => (
+                  <Pressable
+                    key={r.value}
+                    style={[
+                      styles.roleCard,
+                      role === r.value && styles.roleCardActive,
+                    ]}
+                    onPress={() => setRole(r.value)}>
+                    <ThemedText style={styles.roleEmoji}>{r.emoji}</ThemedText>
+                    <ThemedText style={[styles.roleLabel, role === r.value && styles.roleLabelActive]}>
+                      {r.label}
+                    </ThemedText>
+                    <ThemedText style={styles.roleDesc}>{r.desc}</ThemedText>
+                    {role === r.value && (
+                      <View style={styles.checkBadge}>
+                        <ThemedText style={styles.checkText}>✓</ThemedText>
+                      </View>
+                    )}
+                  </Pressable>
+                ))}
+              </View>
+            </View>
+
+            {/* OTP hint */}
+            <View style={styles.otpHintBox}>
+              <ThemedText style={styles.otpHintText}>
+                📱 Your default OTP code will be <ThemedText style={styles.otpCode}>123456</ThemedText> — change it after login
+              </ThemedText>
+            </View>
+
+            {/* Submit */}
             <Pressable
-              style={({ pressed }) => [
-                styles.button,
-                {
-                  backgroundColor: '#4A3AFF',
-                  opacity: pressed || loading ? 0.8 : 1,
-                },
-              ]}
+              style={({ pressed }) => [styles.submitBtn, { opacity: pressed || loading ? 0.8 : 1 }]}
               onPress={handleRegister}
               disabled={loading}>
               {loading ? (
-                <ActivityIndicator color="#FFFFFF" size="small" />
+                <ActivityIndicator color={Brand.black} size="small" />
               ) : (
-                <ThemedText style={styles.buttonText}>Register</ThemedText>
+                <ThemedText style={styles.submitText}>Create Account</ThemedText>
               )}
             </Pressable>
 
+            {/* Footer */}
             <View style={styles.footer}>
-              <ThemedText type="small" themeColor="textSecondary">
-                Already have an account?{' '}
-              </ThemedText>
+              <ThemedText style={styles.footerText}>Already have an account? </ThemedText>
               <Pressable onPress={() => router.push('/(auth)/login')}>
-                <ThemedText type="smallBold" style={styles.linkText}>
-                  Sign in here
-                </ThemedText>
+                <ThemedText style={styles.footerLink}>Sign in here</ThemedText>
               </Pressable>
             </View>
-          </ThemedView>
+          </View>
 
         </ScrollView>
       </KeyboardAvoidingView>
-    </ThemedView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
+  root: {
     flex: 1,
-    justifyContent: 'center',
+    backgroundColor: Brand.bg1,
   },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
+  scroll: {
     flexGrow: 1,
     justifyContent: 'center',
     padding: Spacing.four,
@@ -227,104 +204,190 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     width: '100%',
   },
-  header: {
+
+  // Logo
+  logoWrap: {
     alignItems: 'center',
-    marginBottom: Spacing.five,
+    marginBottom: Spacing.four,
     gap: Spacing.two,
   },
   logoBadge: {
-    width: 64,
-    height: 64,
-    borderRadius: 20,
-    backgroundColor: '#4A3AFF',
+    width: 72,
+    height: 72,
+    borderRadius: Radius.xl,
+    backgroundColor: Brand.accentMuted,
+    borderWidth: 2,
+    borderColor: Brand.accentBorder,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: Spacing.two,
-    shadowColor: '#4A3AFF',
-    shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.3,
-    shadowRadius: 12,
-    elevation: 6,
+    marginBottom: Spacing.one,
+    ...Shadow.accent,
   },
-  logoText: {
-    fontSize: 32,
-    fontWeight: 'bold',
-    color: '#FFFFFF',
-  },
-  title: {
-    fontSize: 28,
+  logoText: { fontSize: 36 },
+  appName: {
+    color: Brand.textPrimary,
+    fontSize: 26,
     fontWeight: '800',
-    textAlign: 'center',
+    letterSpacing: -0.5,
   },
-  subtitle: {
+  appTagline: {
+    color: Brand.textSecondary,
+    fontSize: 13,
     textAlign: 'center',
-    paddingHorizontal: Spacing.three,
-    lineHeight: 18,
+    paddingHorizontal: Spacing.four,
   },
+
+  // Card
   card: {
+    backgroundColor: Brand.bg2,
+    borderRadius: Radius.xl,
     padding: Spacing.four,
-    borderRadius: 24,
     gap: Spacing.three,
-    shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
-    shadowOpacity: 0.1,
-    shadowRadius: 20,
-    elevation: 4,
-  },
-  errorBox: {
-    backgroundColor: '#FFEBEE',
-    padding: Spacing.three,
-    borderRadius: 12,
     borderWidth: 1,
-    borderColor: '#FFCDD2',
+    borderColor: Brand.bg3,
+    ...Shadow.card,
+  },
+
+  // Error
+  errorBox: {
+    backgroundColor: 'rgba(224,82,82,0.12)',
+    borderRadius: Radius.md,
+    padding: Spacing.two + 4,
+    borderWidth: 1,
+    borderColor: 'rgba(224,82,82,0.3)',
   },
   errorText: {
-    color: '#D32F2F',
+    color: Brand.error,
     fontSize: 13,
-    fontWeight: '500',
+    fontWeight: '600',
   },
-  inputContainer: {
-    gap: Spacing.one,
+
+  // Field
+  fieldWrap: { gap: Spacing.one },
+  fieldLabel: {
+    color: Brand.textSecondary,
+    fontSize: 11,
+    fontWeight: '700',
+    letterSpacing: 1.1,
   },
-  input: {
-    height: 48,
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: Brand.bg1,
+    borderRadius: Radius.md,
     borderWidth: 1,
-    borderRadius: 12,
+    borderColor: Brand.bg3,
     paddingHorizontal: Spacing.three,
-    fontSize: 15,
+    gap: Spacing.two,
+    height: 50,
   },
-  roleContainer: {
+  inputIcon: { fontSize: 16 },
+  input: {
+    flex: 1,
+    color: Brand.textPrimary,
+    fontSize: 15,
+    padding: 0,
+  },
+
+  // Role selector
+  roleRow: {
     flexDirection: 'row',
     gap: Spacing.two,
-    marginTop: Spacing.half,
   },
   roleCard: {
     flex: 1,
-    height: 44,
+    backgroundColor: Brand.bg1,
+    borderRadius: Radius.lg,
     borderWidth: 1.5,
-    borderRadius: 12,
-    justifyContent: 'center',
+    borderColor: Brand.bg3,
+    padding: Spacing.two + 4,
     alignItems: 'center',
+    gap: 4,
+    position: 'relative',
   },
-  button: {
-    height: 48,
-    borderRadius: 12,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: Spacing.two,
+  roleCardActive: {
+    borderColor: Brand.accent,
+    backgroundColor: Brand.accentMuted,
   },
-  buttonText: {
-    color: '#FFFFFF',
+  roleEmoji: { fontSize: 26, marginBottom: 2 },
+  roleLabel: {
+    color: Brand.textSecondary,
+    fontSize: 13,
     fontWeight: '700',
-    fontSize: 16,
   },
+  roleLabelActive: {
+    color: Brand.accent,
+  },
+  roleDesc: {
+    color: Brand.textMuted,
+    fontSize: 10,
+    textAlign: 'center',
+    lineHeight: 14,
+  },
+  checkBadge: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 18,
+    height: 18,
+    borderRadius: Radius.full,
+    backgroundColor: Brand.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  checkText: {
+    color: Brand.black,
+    fontSize: 10,
+    fontWeight: '800',
+  },
+
+  // OTP hint
+  otpHintBox: {
+    backgroundColor: Brand.accentMuted,
+    borderRadius: Radius.md,
+    padding: Spacing.two + 4,
+    borderWidth: 1,
+    borderColor: Brand.accentBorder,
+  },
+  otpHintText: {
+    color: Brand.textSecondary,
+    fontSize: 12,
+    lineHeight: 18,
+  },
+  otpCode: {
+    color: Brand.accent,
+    fontWeight: '800',
+  },
+
+  // Submit
+  submitBtn: {
+    backgroundColor: Brand.accent,
+    borderRadius: Radius.md,
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Shadow.accent,
+  },
+  submitText: {
+    color: Brand.black,
+    fontWeight: '800',
+    fontSize: 16,
+    letterSpacing: 0.3,
+  },
+
+  // Footer
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
-    marginTop: Spacing.two,
   },
-  linkText: {
-    color: '#4A3AFF',
+  footerText: {
+    color: Brand.textSecondary,
+    fontSize: 13,
+  },
+  footerLink: {
+    color: Brand.accent,
+    fontSize: 13,
+    fontWeight: '700',
   },
 });
