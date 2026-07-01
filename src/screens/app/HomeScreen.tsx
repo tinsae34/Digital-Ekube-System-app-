@@ -16,6 +16,7 @@ import { Brand, Spacing, Radius, Shadow, MaxContentWidth } from '@/constants/the
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { groupService, Group } from '@/services/groupService';
 import { dashboardService, DashboardStats } from '@/services/dashboardService';
+import { useRouter } from 'expo-router';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type IoniconName = keyof typeof Ionicons.glyphMap;
@@ -126,6 +127,7 @@ function SuggestedCard({ item }: { item: (typeof SUGGESTED_GROUPS)[0] }) {
 // ─── Screen ───────────────────────────────────────────────────────────────────
 export default function HomeScreen() {
   const { user, logout } = useAuth();
+  const router = useRouter();
   const [activeCat, setActiveCat] = useState('1');
   const [search, setSearch] = useState('');
   const [loading, setLoading] = useState(true);
@@ -213,9 +215,18 @@ export default function HomeScreen() {
               </View>
               <ThemedText style={styles.locationSub}>Find ekub groups near you</ThemedText>
             </View>
-            <Pressable onPress={logout} style={styles.avatarWrap}>
-              <Avatar name={user?.name || 'U'} />
-            </Pressable>
+            <View style={styles.headerActions}>
+              {user?.role === 'admin' && (
+                <Pressable
+                  style={styles.createGroupBtn}
+                  onPress={() => router.push('/screens/app/CreateGroupScreen' as any)}>
+                  <Ionicons name="add" size={20} color={Brand.white} />
+                </Pressable>
+              )}
+              <Pressable onPress={logout} style={styles.avatarWrap}>
+                <Avatar name={user?.name || 'U'} />
+              </Pressable>
+            </View>
           </View>
 
           {/* ── Greeting ── */}
@@ -405,7 +416,17 @@ const styles = StyleSheet.create({
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   locationText: { color: Brand.textPrimary, fontSize: 14, fontWeight: '600' },
   locationSub: { color: Brand.textSecondary, fontSize: 12, marginTop: 3 },
-  avatarWrap: { marginLeft: Spacing.two },
+  headerActions: { flexDirection: 'row', alignItems: 'center', gap: Spacing.two },
+  createGroupBtn: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: Brand.accent,
+    justifyContent: 'center',
+    alignItems: 'center',
+    ...Shadow.accent,
+  },
+  avatarWrap: {},
   avatar: {
     width: 42, height: 42,
     borderRadius: 21,
