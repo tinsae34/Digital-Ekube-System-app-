@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Pressable,
@@ -6,12 +6,16 @@ import {
   View,
   TextInput,
   FlatList,
+  RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '@/services/authContext';
 import { ThemedText } from '@/components/themed-text';
 import { Brand, Spacing, Radius, Shadow, MaxContentWidth } from '@/constants/theme';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { groupService, Group } from '@/services/groupService';
+import { dashboardService, DashboardStats } from '@/services/dashboardService';
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 type IoniconName = keyof typeof Ionicons.glyphMap;
@@ -124,11 +128,78 @@ export default function HomeScreen() {
   const { user, logout } = useAuth();
   const [activeCat, setActiveCat] = useState('1');
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [stats, setStats] = useState<DashboardStats | null>(null);
+  const [groups, setGroups] = useState<Group[]>([]);
+  const [myGroups, setMyGroups] = useState<Group[]>([]);
+
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [statsData, allGroupsData, userGroupsData] = await Promise.all([
+        dashboardService.getStats().catch(() => ({
+          totalPool: 0,
+          activeGroups: 0,
+          nextDrawDate: null,
+          totalPaid: 0,
+          totalReceived: 0,
+        })),
+        groupService.getAll().catch(() => ({ groups: [] })),
+        groupService.getUserGroups().catch(() => ({ groups: [] })),
+      ]);
+
+      setStats(statsData);
+      setGroups(allGroupsData.groups.slice(0, 10)); // Top 10
+      setMyGroups(userGroupsData.groups);
+    } catch (error) {
+      console.error('Load data error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const onRefresh = async () => {
+    setRefreshing(true);
+    await loadData();
+    setRefreshing(false);
+  };
+
+  useEffect(() => {
+    loadData();
+  }, []);
+
+  const formatDate = (dateStr: string | null) => {
+    if (!dateStr) return 'N/A';
+    const date = new Date(dateStr);
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+  };
+
+  const formatCurrency = (amount: number) => {
+    return amount.toLocaleString('en-US', { maximumFractionDigits: 0 });
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.root, { justifyContent: 'center', alignItems: 'center' }]}>
+        <ActivityIndicator size="large" color={Brand.accent} />
+        <ThemedText style={{ marginTop: Spacing.three, color: Brand.textSecondary }}>
+          Loading your dashboard...
+        </ThemedText>
+      </View>
+    );
+  }
 
   return (
     <View style={styles.root}>
       <SafeAreaView style={styles.safe} edges={['top']}>
-        <ScrollView contentContainerStyle={styles.scroll} showsVerticalScrollIndicator={false}>
+        <ScrollView
+          contentContainerStyle={styles.scroll}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={Brand.accent} />
+          }
+        >
 
           {/* ── Header ── */}
           <View style={styles.header}>
@@ -201,44 +272,77 @@ export default function HomeScreen() {
           <View style={styles.statsCard}>
             <View style={styles.statItem}>
               <Ionicons name="cash-outline" size={18} color={Brand.accent} />
-              <ThemedText style={styles.statValue}>12,500</ThemedText>
-              <ThemedText style={styles.statLabel}>Pool (Birr)</ThemedText>
+              <ThemedText style={styles.statValue}>{formatCurrency(stats?.totalPool || 0)}</ThemedText>
+              <ThemedText style={styles.statLabel}>Total Pool (Birr)</ThemedText>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Ionicons name="layers-outline" size={18} color={Brand.accent} />
-              <ThemedText style={styles.statValue}>3</ThemedText>
+              <ThemedText style={styles.statValue}>{stats?.activeGroups || 0}</ThemedText>
               <ThemedText style={styles.statLabel}>Active Groups</ThemedText>
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
               <Ionicons name="calendar-outline" size={18} color={Brand.accent} />
-              <ThemedText style={styles.statValue}>Jun 30</ThemedText>
+              <ThemedText style={styles.statValue}>{formatDate(stats?.nextDrawDate || null)}</ThemedText>
               <ThemedText style={styles.statLabel}>Next Draw</ThemedText>
             </View>
           </View>
 
           {/* ── Top Groups ── */}
           <View style={styles.sectionHeader}>
-            <ThemedText style={styles.sectionTitle}>Top rated groups</ThemedText>
+            <ThemedText style={styles.sectionTitle}>
+              {myGroups.length > 0 ? 'Your Groups' : 'Available Groups'}
+            </ThemedText>
             <Pressable style={styles.seeAllBtn}>
               <ThemedText style={styles.seeAllText}>See all</ThemedText>
               <Ionicons name="arrow-forward-outline" size={13} color={Brand.accent} />
             </Pressable>
           </View>
 
-          <FlatList
-            data={TOP_GROUPS}
-            keyExtractor={i => i.id}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            contentContainerStyle={styles.cardList}
-            renderItem={({ item }) => <GroupCard item={item} />}
-          />
+          {(myGroups.length > 0 ? myGroups : groups).length > 0 ? (
+            <FlatList
+              data={myGroups.length > 0 ? myGroups : groups}
+              keyExtractor={i => i.id}
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              contentContainerStyle={styles.cardList}
+              renderItem={({ item }) => (
+                <View style={[styles.groupCard, { backgroundColor: '#0F1A2E' }]}>
+                  <View style={styles.groupIconWrap}>
+                    <Ionicons name="wallet-outline" size={32} color={Brand.accent} />
+                  </View>
+                  <ThemedText style={styles.groupName} numberOfLines={1}>{item.name}</ThemedText>
+                  <View style={styles.groupMeta}>
+                    <View style={styles.groupMetaItem}>
+                      <Ionicons name="calendar-outline" size={11} color={Brand.textSecondary} />
+                      <ThemedText style={styles.metaText}>{item.frequency}</ThemedText>
+                    </View>
+                    <View style={styles.ratingPill}>
+                      <Ionicons name="people" size={10} color={Brand.accent} />
+                      <ThemedText style={styles.ratingText}>{item.member_count}</ThemedText>
+                    </View>
+                  </View>
+                  <View style={styles.groupFooter}>
+                    <ThemedText style={styles.contributionText}>{item.contribution_amount} Birr</ThemedText>
+                    <ThemedText style={[styles.contributionText, { color: Brand.accent }]}>
+                      {item.status}
+                    </ThemedText>
+                  </View>
+                </View>
+              )}
+            />
+          ) : (
+            <View style={styles.emptyState}>
+              <Ionicons name="folder-open-outline" size={48} color={Brand.textMuted} />
+              <ThemedText style={styles.emptyText}>No groups yet</ThemedText>
+              <ThemedText style={styles.emptySubtext}>Create or join a group to get started</ThemedText>
+            </View>
+          )}
 
           {/* ── Suggested ── */}
           <View style={styles.sectionHeader}>
-            <ThemedText style={styles.sectionTitle}>Suggested for you</ThemedText>
+            <ThemedText style={styles.sectionTitle}>All Available Groups</ThemedText>
             <Pressable style={styles.seeAllBtn}>
               <ThemedText style={styles.seeAllText}>See all</ThemedText>
               <Ionicons name="arrow-forward-outline" size={13} color={Brand.accent} />
@@ -246,9 +350,32 @@ export default function HomeScreen() {
           </View>
 
           <View style={styles.suggestedList}>
-            {SUGGESTED_GROUPS.map(item => (
-              <SuggestedCard key={item.id} item={item} />
+            {groups.slice(0, 5).map(item => (
+              <View key={item.id} style={styles.suggestedCard}>
+                <View style={styles.suggestedIconWrap}>
+                  <Ionicons name="people-outline" size={22} color={Brand.accent} />
+                </View>
+                <View style={{ flex: 1, gap: 3 }}>
+                  <ThemedText style={styles.suggestedName} numberOfLines={1}>{item.name}</ThemedText>
+                  <View style={styles.suggestedMeta}>
+                    <Ionicons name="people-outline" size={11} color={Brand.textSecondary} />
+                    <ThemedText style={styles.suggestedMetaText}>
+                      {item.member_count} members · {item.contribution_amount} Birr/{item.frequency}
+                    </ThemedText>
+                  </View>
+                </View>
+                <Pressable style={styles.joinBtn}>
+                  <ThemedText style={styles.joinBtnText}>Join</ThemedText>
+                </Pressable>
+              </View>
             ))}
+            {groups.length === 0 && (
+              <View style={styles.emptyState}>
+                <Ionicons name="globe-outline" size={48} color={Brand.textMuted} />
+                <ThemedText style={styles.emptyText}>No groups available</ThemedText>
+                <ThemedText style={styles.emptySubtext}>Be the first to create one!</ThemedText>
+              </View>
+            )}
           </View>
 
           <View style={{ height: Spacing.seven }} />
@@ -447,4 +574,20 @@ const styles = StyleSheet.create({
     ...Shadow.accent,
   },
   joinBtnText: { color: Brand.white, fontSize: 12, fontWeight: '800' },
+
+  // Empty state
+  emptyState: {
+    alignItems: 'center',
+    paddingVertical: Spacing.five,
+    gap: Spacing.two,
+  },
+  emptyText: {
+    color: Brand.textSecondary,
+    fontSize: 16,
+    fontWeight: '600',
+  },
+  emptySubtext: {
+    color: Brand.textMuted,
+    fontSize: 13,
+  },
 });
