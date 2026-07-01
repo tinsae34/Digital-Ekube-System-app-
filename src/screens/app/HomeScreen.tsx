@@ -18,23 +18,23 @@ type IoniconName = keyof typeof Ionicons.glyphMap;
 
 // ─── Static Data ──────────────────────────────────────────────────────────────
 const CATEGORIES: { id: string; label: string; icon: IoniconName }[] = [
-  { id: '1', label: 'All',     icon: 'grid-outline'          },
-  { id: '2', label: 'Weekly',  icon: 'calendar-outline'      },
-  { id: '3', label: 'Monthly', icon: 'calendar-number-outline'},
-  { id: '4', label: 'Premium', icon: 'star-outline'          },
-  { id: '5', label: 'New',     icon: 'sparkles-outline'      },
+  { id: '1', label: 'All', icon: 'grid-outline' },
+  { id: '2', label: 'Weekly', icon: 'calendar-outline' },
+  { id: '3', label: 'Monthly', icon: 'calendar-number-outline' },
+  { id: '4', label: 'Premium', icon: 'star-outline' },
+  { id: '5', label: 'New', icon: 'sparkles-outline' },
 ];
 
 const TOP_GROUPS = [
-  { id: '1', name: 'Habesha Weekly Savings', location: 'Addis Ababa',  contribution: '500 Birr/wk',    members: 12, rating: '4.8', icon: 'wallet-outline'    as IoniconName, bgGrad: '#0F1A2E' },
-  { id: '2', name: 'Tech Gadget Fund',        location: 'Bole District', contribution: '1,000 Birr/mo', members: 8,  rating: '4.5', icon: 'laptop-outline'    as IoniconName, bgGrad: '#0E1A1A' },
-  { id: '3', name: 'Family Holiday Pool',     location: 'Piassa',       contribution: '250 Birr/wk',   members: 5,  rating: '4.2', icon: 'earth-outline'     as IoniconName, bgGrad: '#1A0E2E' },
+  { id: '1', name: 'Habesha Weekly Savings', location: 'Addis Ababa', contribution: '500 Birr/wk', members: 12, rating: '4.8', icon: 'wallet-outline' as IoniconName, bgGrad: '#0F1A2E' },
+  { id: '2', name: 'Tech Gadget Fund', location: 'Bole District', contribution: '1,000 Birr/mo', members: 8, rating: '4.5', icon: 'laptop-outline' as IoniconName, bgGrad: '#0E1A1A' },
+  { id: '3', name: 'Family Holiday Pool', location: 'Piassa', contribution: '250 Birr/wk', members: 5, rating: '4.2', icon: 'earth-outline' as IoniconName, bgGrad: '#1A0E2E' },
 ];
 
 const SUGGESTED_GROUPS = [
-  { id: '4', name: 'Merchants Circle', contribution: '2,000 Birr/mo', members: 20, icon: 'storefront-outline'  as IoniconName },
-  { id: '5', name: 'Youth Savers',     contribution: '100 Birr/wk',   members: 15, icon: 'school-outline'      as IoniconName },
-  { id: '6', name: 'Diaspora Pool',    contribution: '500 Birr/wk',   members: 30, icon: 'airplane-outline'    as IoniconName },
+  { id: '4', name: 'Merchants Circle', contribution: '2,000 Birr/mo', members: 20, icon: 'storefront-outline' as IoniconName },
+  { id: '5', name: 'Youth Savers', contribution: '100 Birr/wk', members: 15, icon: 'school-outline' as IoniconName },
+  { id: '6', name: 'Diaspora Pool', contribution: '500 Birr/wk', members: 30, icon: 'airplane-outline' as IoniconName },
 ];
 
 function getGreeting() {
@@ -277,7 +277,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'flex-start' },
   locationRow: { flexDirection: 'row', alignItems: 'center', gap: 4 },
   locationText: { color: Brand.textPrimary, fontSize: 14, fontWeight: '600' },
-  locationSub:  { color: Brand.textSecondary, fontSize: 12, marginTop: 3 },
+  locationSub: { color: Brand.textSecondary, fontSize: 12, marginTop: 3 },
   avatarWrap: { marginLeft: Spacing.two },
   avatar: {
     width: 42, height: 42,
